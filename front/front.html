@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Pobierz plik</title>
+</head>
+<body>
+<h1>Pobierz plik z serwera</h1>
+<button id="downloadBtn">Pobierz plik</button>
+
+<script>
+    document.getElementById('downloadBtn').addEventListener('click', async () => {
+        try {
+            const response = await fetch('http://localhost:8080/api/export/fullbody/xls');
+
+            if (!response.ok) {
+                throw new Error('Błąd pobierania pliku');
+            }
+
+            const data = await response.json();
+
+            // Pobierz zawartość pliku z Base64
+            const base64Content = data.documentAsBytes;  // lub data.encodedDocument
+            const fileFormat = data.format || 'CSV';     // Oczekiwane wartości: CSV, XLS
+            const fileName = data.fileName ? data.fileName : 'plik';
+
+            // Rozkodowanie Base64
+            const byteCharacters = atob(base64Content);
+            const byteNumbers = Array.from(byteCharacters, char => char.charCodeAt(0));
+            const byteArray = new Uint8Array(byteNumbers);
+
+            // Ustawienie odpowiedniego MIME type
+            let mimeType = 'text/csv;charset=utf-8;';
+            let extension = '.csv';
+
+            if (fileFormat === 'XLS') {
+                mimeType = 'application/vnd.ms-excel';
+                extension = '.xls';
+            }
+
+            const blob = new Blob([byteArray], { type: mimeType });
+
+            // Tworzenie linku do pobrania pliku
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', fileName + extension);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            console.log('Plik został pobrany! Format:', fileFormat);
+        } catch (error) {
+            console.error('Błąd:', error);
+            alert('Nie udało się pobrać pliku.');
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Pobierz plik z Base64</title>
+</head>
+<body>
+<h1>Pobierz plik z Base64</h1>
+
+<label for="base64Input">Wklej Base64:</label><br>
+<textarea id="base64Input" rows="10" cols="80" placeholder="Tutaj wklej dane Base64"></textarea><br><br>
+
+<label for="fileFormatHtml">Wybierz format pliku:</label>
+<select id="fileFormatHtml">
+    <option value="CSV">CSV</option>
+    <option value="XLS">XLS</option>
+</select><br><br>
+
+<label for="fileNameHtml">Nazwa pliku (bez rozszerzenia):</label>
+<input type="text" id="fileNameHtml" placeholder="nazwa_pliku"><br><br>
+
+<button id="downloadBtn">Pobierz plik</button>
+
+<script>
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+     const base64Content = document.getElementById('base64Input').value.trim();
+     const fileFormatHtml = document.getElementById('fileFormatHtml').value;
+     const fileNameInput = document.getElementById('fileNameHtml').value.trim() || 'plik';
+
+     if (!base64Content) {
+         alert("Proszę wkleić dane Base64.");
+         return;
+     }
+
+     try {
+         // Usuwanie nagłówka Base64 (jeśli istnieje)
+         const base64ContentCleaned = base64Content.split(',').pop();
+
+         // Konwersja Base64 → Uint8Array
+         const byteArray = new Uint8Array([...atob(base64ContentCleaned)].map(char => char.charCodeAt(0)));
+        console.log('byteArray first' +byteArray);
+        const textDecoder = new TextDecoder('utf-8');
+        const decodedString = textDecoder.decode(byteArray);
+
+        console.log(decodedString);
+        console.log('decoded String' + decodedString);
+
+        const byteArray2 = new Uint8Array([...atob(decodedString)].map(char => char.charCodeAt(0)));
+        console.log('byteArray2 ' + byteArray2);
+
+         // Określenie formatu pliku
+         let mimeType = 'text/csv;charset=utf-8;';
+         let extension = '.csv';
+
+         if (fileFormatHtml === 'XLS') {
+             mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+             extension = '.xlsx';
+         }
+
+         // Tworzenie Blob i linku do pobrania
+         const blob = new Blob([byteArray2], { type: mimeType });
+
+         const link = document.createElement('a');
+         link.href = URL.createObjectURL(blob);
+         link.setAttribute('download', fileNameInput + extension);
+         document.body.appendChild(link);
+         link.click();
+         document.body.removeChild(link);
+
+         console.log('Plik pobrany:', fileNameInput + extension);
+     } catch (error) {
+         console.error('Błąd dekodowania Base64:', error);
+         alert('Błąd podczas dekodowania Base64 lub tworzenia pliku.');
+     }
+ });
+
+</script>
+
+</body>
+</html>
+
+<!--
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+        const base64Content = document.getElementById('base64Input').value.trim();
+        const fileFormatHtml = document.getElementById('fileFormatHtml').value;
+        const fileNameInput = document.getElementById('fileNameHtml').value.trim() || 'plik';
+
+        if (!base64Content) {
+            alert("Proszę wkleić dane Base64.");
+            return;
+        }
+
+        try {
+            // 🔹 Usuwanie nagłówka Base64 (jeśli istnieje)
+            const base64ContentCleaned = base64Content.includes(',') ? base64Content.split(',')[1] : base64Content;
+
+            // 🔹 Dekodowanie Base64 → Bajty
+            const binaryString = atob(base64ContentCleaned);
+            const byteArray = new Uint8Array(binaryString.length);
+
+            for (let i = 0; i < binaryString.length; i++) {
+                byteArray[i] = binaryString.charCodeAt(i);
+            }
+
+            // 🔹 Określenie formatu pliku
+            let mimeType = 'text/csv;charset=utf-8;';
+            let extension = '.csv';
+
+            if (fileFormatHtml === 'XLS') {
+                mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                extension = '.xls';
+            }
+
+            // 🔹 Tworzenie pliku Blob z binarną zawartością
+            const blob = new Blob([byteArray], { type: mimeType });
+
+            // 🔹 Tworzenie linku do pobrania
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', fileNameInput + extension);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            console.log('✅ Plik został pobrany:', fileNameInput + extension);
+        } catch (error) {
+            console.error('❌ Błąd dekodowania Base64:', error);
+            alert('Błąd podczas dekodowania Base64 lub tworzenia pliku.');
+        }
+    });
+
+-->
